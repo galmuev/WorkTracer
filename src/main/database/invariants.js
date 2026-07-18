@@ -38,6 +38,14 @@ function checkInvariants(db, { throwOnFailure = true } = {}) {
     WHERE a.is_manual = 1 OR a.project_mode <> 'app'`).all();
   if (invalidLinkSources.length) failures.push({ invariant: 'valid-link-source', count: invalidLinkSources.length });
 
+  const ignoredLinkTargets = db.prepare(`SELECT l.id FROM project_links l JOIN projects target ON target.id = l.target_project_id
+    WHERE l.enabled = 1 AND (target.is_ignored = 1 OR EXISTS (
+      SELECT 1 FROM group_members anchor JOIN group_members member ON member.group_id = anchor.group_id
+      JOIN projects content ON content.id = member.project_id
+      WHERE anchor.project_id = target.id AND content.is_ignored = 1
+    ))`).all();
+  if (ignoredLinkTargets.length) failures.push({ invariant: 'ignored-project-link-disabled', count: ignoredLinkTargets.length });
+
   const result = { ok: failures.length === 0, failures };
   if (!result.ok && throwOnFailure) throw new PersistenceError('corruption', 'Database invariant validation failed.', { publicMessage: 'Проверка целостности базы данных завершилась с ошибкой.' });
   return result;

@@ -28,6 +28,8 @@ import path exists for the old JSON formats.
 - `applications`: tracked executable metadata and internal manual container
   anchors.
 - `projects`: stable project identity. Display names are not foreign keys.
+  `is_ignored` is a reversible exclusion rule: historical intervals remain, but
+  ignored projects cannot receive new intervals or become enabled link targets.
 - `tracked_files`: normalized file bindings and the last asynchronously observed
   filesystem state.
 - `project_groups` and `group_members`: named containers. A project can be a

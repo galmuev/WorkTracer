@@ -1,6 +1,6 @@
 {
   "name": "worktracker",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Локальный трекер рабочего времени по активным приложениям и файлам",
   "main": "main.js",
   "scripts": {

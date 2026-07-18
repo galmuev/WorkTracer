@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const { temporaryDirectory, createTestStore } = require('./helpers');
 const { initializeConnection, openConnection } = require('../src/main/database/connection');
-const { LATEST_SCHEMA_VERSION, validateSchema } = require('../src/main/database/schema');
+const { LATEST_SCHEMA_VERSION, MIGRATIONS, validateSchema } = require('../src/main/database/schema');
 const { checkInvariants } = require('../src/main/database/invariants');
 const { classifySqliteError } = require('../src/main/database/errors');
 
@@ -29,6 +29,24 @@ test('unknown newer schema is rejected without modification', () => {
   const inspect = openConnection(file, { readonly: true, fileMustExist: true });
   assert.equal(inspect.pragma('user_version', { simple: true }), LATEST_SCHEMA_VERSION + 10);
   inspect.close();
+  require('node:fs').rmSync(directory, { recursive: true, force: true });
+});
+
+test('version 1 database migrates to ignored-project schema without losing projects', () => {
+  const directory = temporaryDirectory();
+  const file = path.join(directory, 'version-1.db');
+  const legacy = openConnection(file);
+  legacy.exec(MIGRATIONS[0].sql);
+  legacy.pragma('user_version = 1');
+  legacy.prepare(`INSERT INTO applications(id, name, process_name, normalized_process_name, project_mode,
+    title_segment_from_end, is_manual, created_at_ms, updated_at_ms)
+    VALUES ('legacy-app', 'Legacy', 'legacy', 'legacy', 'file', 2, 0, 1, 1)`).run();
+  legacy.prepare("INSERT INTO projects(id, application_id, name, kind, created_at_ms, updated_at_ms) VALUES ('legacy-project', 'legacy-app', 'Legacy project', 'normal', 1, 1)").run();
+  legacy.close();
+  const migrated = initializeConnection(file);
+  assert.equal(migrated.schema.version, LATEST_SCHEMA_VERSION);
+  assert.equal(migrated.db.prepare("SELECT is_ignored FROM projects WHERE id = 'legacy-project'").get().is_ignored, 0);
+  migrated.db.close();
   require('node:fs').rmSync(directory, { recursive: true, force: true });
 });
 

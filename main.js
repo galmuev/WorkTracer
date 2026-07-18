@@ -277,6 +277,11 @@ function registerIpc() {
   });
   handle('tracker:create-empty-project', async (name) => { await store.createEmptyProject(name); return publicState(); });
   handle('tracker:delete-project', async (member) => { await destructiveService.deleteProject(member); trackingEngine.reset('project-remove'); return publicState(); });
+  handle('tracker:set-project-ignored', async (member, ignored) => {
+    await store.setProjectIgnored(member, Boolean(ignored));
+    trackingEngine.reset(ignored ? 'project-ignore' : 'project-restore');
+    return publicState();
+  });
   handle('tracker:merge-projects', async (source, target) => { await store.mergeProjects(source, target); return publicState(); });
   handle('tracker:ungroup-project', async (groupId, member) => { await store.ungroupProject(groupId, member); return publicState(); });
   handle('tracker:rename-project-group', async (groupId, name) => { await store.renameProjectGroup(groupId, name); return publicState(); });

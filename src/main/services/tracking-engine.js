@@ -101,6 +101,7 @@ class TrackingEngine {
       project = this.store.findProject(application.id, name);
       if (!project) project = await this.store.ensureDetectedProject(application.id, name === UNASSIGNED_DISPLAY_NAME ? UNASSIGNED_NAME : name, name === UNASSIGNED_DISPLAY_NAME ? 'unassigned' : 'normal');
     }
+    if (!project || project.is_ignored) return null;
     const link = application.projectMode === 'app' ? this.store.activeLinkForApplication(application.id) : null;
     return {
       applicationId: application.id, applicationName: application.name,

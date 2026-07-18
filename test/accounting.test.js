@@ -40,6 +40,45 @@ test('duplicate sample ID is idempotent', async () => {
   } finally { fixture.cleanup(); }
 });
 
+test('ignored project preserves history but rejects new intervals until restored', async () => {
+  const fixture = createTestStore();
+  try {
+    const project = await fixture.store.ensureDetectedProject('blender', 'ignored.blend');
+    await fixture.store.recordInterval({ sampleId: 'ignored-before', applicationId: 'blender', projectId: project.id, startWallMs: 0, endWallMs: 100, durationMs: 100, monitorGeneration: 1 });
+    await fixture.store.setProjectIgnored({ appId: 'blender', projectName: project.name }, true);
+    const ignoredWrite = await fixture.store.recordInterval({ sampleId: 'ignored-after', applicationId: 'blender', projectId: project.id, startWallMs: 100, endWallMs: 200, durationMs: 100, monitorGeneration: 1 });
+    assert.equal(ignoredWrite.inserted, false);
+    assert.equal(ignoredWrite.ignored, true);
+    assert.throws(() => fixture.db.prepare(`INSERT INTO tracking_intervals(
+      id, sample_id, application_id, project_id, start_wall_ms, end_wall_ms, duration_ms, monitor_generation, created_at_ms
+    ) VALUES ('ignored-direct', 'ignored-direct', 'blender', ?, 100, 200, 100, 1, 200)`).run(project.id), /ignored project/);
+    assert.equal(fixture.db.prepare('SELECT COUNT(*) AS count FROM tracking_intervals WHERE project_id = ?').get(project.id).count, 1);
+    const hiddenState = fixture.store.getStatePage();
+    assert.equal(hiddenState.statistics.blender.projects['ignored.blend'], undefined);
+    assert.equal(hiddenState.ignoredProjects.some((item) => item.appId === 'blender' && item.projectName === 'ignored.blend'), true);
+    await fixture.store.setProjectIgnored({ appId: 'blender', projectName: project.name }, false);
+    const restoredWrite = await fixture.store.recordInterval({ sampleId: 'ignored-restored', applicationId: 'blender', projectId: project.id, startWallMs: 200, endWallMs: 300, durationMs: 100, monitorGeneration: 1 });
+    assert.equal(restoredWrite.inserted, true);
+  } finally { fixture.cleanup(); }
+});
+
+test('tracking engine reports no current activity for an ignored window project', async () => {
+  const fixture = createTestStore();
+  const clock = new FakeClock({ wallMs: 1000, monotonicMs: 0 });
+  const engine = createEngine(fixture.store, clock);
+  try {
+    await engine.handleSample({ processName: 'blender', title: 'popup.blend - Blender', idleSeconds: 0 }, { generation: 7, sequence: 1 });
+    await fixture.store.setProjectIgnored({ appId: 'blender', projectName: 'popup.blend' }, true);
+    engine.reset('test-ignore');
+    clock.advance(1000);
+    const activity = await engine.handleSample({ processName: 'blender', title: 'popup.blend - Blender', idleSeconds: 0 }, { generation: 7, sequence: 2 });
+    assert.equal(activity, null);
+    clock.advance(1000);
+    await engine.handleSample({ processName: 'blender', title: 'popup.blend - Blender', idleSeconds: 0 }, { generation: 7, sequence: 3 });
+    assert.equal(fixture.db.prepare('SELECT COUNT(*) AS count FROM tracking_intervals').get().count, 0);
+  } finally { fixture.cleanup(); }
+});
+
 test('wall-clock rollback never creates negative duration', async () => {
   const fixture = createTestStore();
   const clock = new FakeClock({ wallMs: 10_000, monotonicMs: 0 });
@@ -102,6 +141,20 @@ test('database rejects an allocation that does not match link source, target and
     });
     assert.throws(() => fixture.db.prepare(`INSERT INTO link_allocations(interval_id, link_id, target_project_id, duration_ms)
       VALUES (?, ?, ?, ?)`).run(recorded.intervalId, link.id, link.targetProjectId, 99), /invalid link allocation/);
+  } finally { fixture.cleanup(); }
+});
+
+test('ignoring a linked target disables attribution to its container', async () => {
+  const fixture = createTestStore();
+  try {
+    await fixture.store.addApplication({ name: 'Linked source', processName: 'linked-source', projectMode: 'app', extensions: [] });
+    const source = fixture.store.findApplicationByProcess('linked-source');
+    const target = await fixture.store.ensureDetectedProject('blender', 'linked-hidden.blend');
+    await fixture.store.addProjectLink(source.id, { appId: 'blender', projectName: target.name });
+    assert.ok(fixture.store.activeLinkForApplication(source.id));
+    await fixture.store.setProjectIgnored({ appId: 'blender', projectName: target.name }, true);
+    assert.equal(fixture.store.activeLinkForApplication(source.id), null);
+    assert.equal(checkInvariants(fixture.db).ok, true);
   } finally { fixture.cleanup(); }
 });
 

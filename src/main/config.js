@@ -11,6 +11,7 @@ const DATABASE = Object.freeze({
   overviewPageSize: 250,
   maximumPageSize: 500,
   maximumGroupMembersPerState: 2000,
+  maximumIgnoredProjectsPerState: 1000,
   writeRetryCount: 2,
 });
 

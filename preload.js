@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('workTracker', {
   createBackup: () => ipcRenderer.invoke('tracker:create-backup'),
   openDataFolder: () => ipcRenderer.invoke('tracker:open-data-folder'),
   deleteProject: (project) => ipcRenderer.invoke('tracker:delete-project', project),
+  setProjectIgnored: (project, ignored) => ipcRenderer.invoke('tracker:set-project-ignored', project, ignored),
   mergeProjects: (source, target) => ipcRenderer.invoke('tracker:merge-projects', source, target),
   ungroupProject: (groupId, project) => ipcRenderer.invoke('tracker:ungroup-project', groupId, project),
   renameProjectGroup: (groupId, name) => ipcRenderer.invoke('tracker:rename-project-group', groupId, name),

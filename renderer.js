@@ -26,7 +26,7 @@ const TRANSLATIONS = {
     parameters: 'Параметры', generalSettings: 'Общие настройки', settingsSubtitle: 'Настройте частоту проверки и реакцию на бездействие.', activityTracking: 'Учёт активности', settingsApply: 'Изменения применяются к фоновому монитору сразу после сохранения.', interfaceLanguage: 'Язык интерфейса', languageHelp: 'Меняет язык окна, подсказок, ошибок и меню в системном трее.', russian: 'Русский', launchAtStartup: 'Запускать вместе с Windows', launchAtStartupHelp: 'WorkTracer запустится в системном трее без открытия основного окна.',
     pollInterval: 'Интервал проверки', pollHelp: 'Как часто проверять активное окно. Меньшее значение точнее, но создаёт больше системных обращений.', idleThreshold: 'Порог бездействия', idleHelp: 'Не учитывать время, если пользователь не двигает мышь и не нажимает клавиши. Значение 0 отключает проверку.', secondsShort: 'сек', minutesShort: 'мин', saveSettings: 'Сохранить настройки', resetStats: 'Сбросить статистику', resetHelp: 'Настройки программ останутся без изменений.', clearData: 'Очистить данные',
     mergeProject: 'Объединить проекты', allApps: 'Все программы', pause: 'Приостановить', resume: 'Возобновить', waitingWindow: 'Ожидание активного окна', trackingPaused: 'Учёт времени приостановлен', resumeHelp: 'Нажмите «Возобновить», чтобы продолжить.', trackingNow: 'Сейчас отслеживается', mergedBadge: 'КОНТЕЙНЕР', inProject: 'В этом проекте',
-    noProjects: 'Пока нет записанных проектов', noProjectsHelp: 'Статистика появится после обнаружения активного окна.', mergedProject: 'Контейнер', totalTime: 'общее время', tracking: 'Учёт идёт', waiting: 'Ожидание', monitoringActive: 'Мониторинг активен', onPause: 'На паузе', notRecording: 'Время не записывается',
+    noProjects: 'Пока нет записанных проектов', noProjectsHelp: 'Статистика появится после обнаружения активного окна.', ignoredProjects: 'Не отслеживаемые', ignoredProjectsHelp: 'Время для этих проектов и служебных окон не учитывается.', hideProjectTitle: 'Не отслеживать', restoreProjectTitle: 'Вернуть в отслеживаемые', mergedProject: 'Контейнер', totalTime: 'общее время', tracking: 'Учёт идёт', waiting: 'Ожидание', monitoringActive: 'Мониторинг активен', onPause: 'На паузе', notRecording: 'Время не записывается',
     fileModeHint: 'Первая часть заголовка активного окна используется для определения проекта.', trackedFileModeHint: 'Время проекта начинает учитываться только после изменения выбранного файла на диске.', appModeHint: 'Всё время работы в программе записывается в один проект независимо от открытого документа.', segmentModeHint: 'Вторая часть заголовка активного окна используется для определения проекта.', noTitleHint: 'Сначала используйте «Активное окно», чтобы выбрать часть реального заголовка.', preview: 'Будет определён проект: {name}',
     processLine: 'Процесс: {process} · {extensions}', projectCount: '{count} проектов', filesCount: '{count} файла', combinedCount: '{count} проектов в контейнере', lastChange: '{count} файла · последнее изменение {date}', groupTime: 'Общее время · {count} файла',
     detected: 'Обнаружен процесс {process}{title}', selectedFile: 'Выбран файл: {path}', dataFile: 'Файл данных: {path}', checkingEvery: 'Откройте отслеживаемую программу — проверка выполняется каждые {seconds} сек.',
@@ -47,7 +47,7 @@ const TRANSLATIONS = {
     parameters: 'Preferences', generalSettings: 'General settings', settingsSubtitle: 'Configure check frequency and idle behavior.', activityTracking: 'Activity tracking', settingsApply: 'Changes are applied to the background monitor immediately after saving.', interfaceLanguage: 'Interface language', languageHelp: 'Changes the window, hints, errors, and system tray menu language.', russian: 'Russian', launchAtStartup: 'Start with Windows', launchAtStartupHelp: 'WorkTracer starts in the system tray without opening the main window.',
     pollInterval: 'Check interval', pollHelp: 'How often to check the active window. Lower values are more precise but create more system calls.', idleThreshold: 'Idle threshold', idleHelp: 'Do not count time when there is no mouse or keyboard input. Set to 0 to disable.', secondsShort: 'sec', minutesShort: 'min', saveSettings: 'Save settings', resetStats: 'Reset statistics', resetHelp: 'Application settings will remain unchanged.', clearData: 'Clear data',
     mergeProject: 'Combine projects', allApps: 'All applications', pause: 'Pause', resume: 'Resume', waitingWindow: 'Waiting for an active window', trackingPaused: 'Time tracking is paused', resumeHelp: 'Click “Resume” to continue.', trackingNow: 'Tracking now', mergedBadge: 'CONTAINER', inProject: 'In this project',
-    noProjects: 'No projects recorded yet', noProjectsHelp: 'Statistics will appear after a tracked window is detected.', mergedProject: 'Container', totalTime: 'total time', tracking: 'Tracking', waiting: 'Waiting', monitoringActive: 'Monitoring is active', onPause: 'Paused', notRecording: 'Time is not being recorded',
+    noProjects: 'No projects recorded yet', noProjectsHelp: 'Statistics will appear after a tracked window is detected.', ignoredProjects: 'Not tracked', ignoredProjectsHelp: 'Time is not counted for these projects and utility windows.', hideProjectTitle: 'Do not track', restoreProjectTitle: 'Restore tracking', mergedProject: 'Container', totalTime: 'total time', tracking: 'Tracking', waiting: 'Waiting', monitoringActive: 'Monitoring is active', onPause: 'Paused', notRecording: 'Time is not being recorded',
     fileModeHint: 'The first part of the active window title is used to identify the project.', trackedFileModeHint: 'Project time starts only after the selected file changes on disk.', appModeHint: 'All time in the application is recorded as one project regardless of the open document.', segmentModeHint: 'The second part of the active window title is used to identify the project.', noTitleHint: 'Use “Active window” first to select a part of the real window title.', preview: 'Detected project: {name}',
     processLine: 'Process: {process} · {extensions}', projectCount: '{count} projects', filesCount: '{count} files', combinedCount: '{count} projects in container', lastChange: '{count} files · last change {date}', groupTime: 'Container time · {count} files',
     detected: 'Detected process {process}{title}', selectedFile: 'Selected file: {path}', dataFile: 'Data file: {path}', checkingEvery: 'Open a tracked application — the active window is checked every {seconds} sec.',
@@ -72,6 +72,8 @@ function appDisplayName(app) {
 const elements = {
   currentCard: document.querySelector('#current-card'),
   projectList: document.querySelector('#project-list'),
+  ignoredProjectsPanel: document.querySelector('#ignored-projects-panel'),
+  ignoredProjectList: document.querySelector('#ignored-project-list'),
   appList: document.querySelector('#app-list'),
   appFilter: document.querySelector('#app-filter'),
   createEmptyProjectButton: document.querySelector('#create-empty-project-button'),
@@ -129,6 +131,8 @@ const icon = {
   pulse: '<span class="relative flex h-2.5 w-2.5"><span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60"></span><span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400"></span></span>',
   merge: '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>',
   trash: '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg>',
+  hide: '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 4.2A10.5 10.5 0 0 1 12 4c5.5 0 9 6 9 6a16 16 0 0 1-2.1 2.8M6.6 6.6C4.3 8.1 3 10 3 10s3.5 6 9 6c1 0 1.9-.2 2.7-.5"/></svg>',
+  restore: '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>',
   link: '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12a4 4 0 0 0 6 3l3-3a4 4 0 0 0-6-6l-1 1"/><path d="M15 12a4 4 0 0 0-6-3l-3 3a4 4 0 0 0 6 6l1-1"/></svg>',
   pencil: '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m4 20 4.5-1 10-10-3.5-3.5-10 10zM13.5 7l3.5 3.5"/></svg>',
 };
@@ -315,10 +319,10 @@ function renderProjectRows(projects) {
         : project.app.projectMode === 'tracked-file'
           ? `<button class="icon-button add-file-for-app text-sky-500" data-app-id="${escapeHtml(project.app.id)}" title="${t('addTrackedFileTitle')}"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h7l2 2h9v11H3z"/><path d="M12 11v5M9.5 13.5h5"/></svg></button>`
           : `<button class="icon-button merge-project text-sky-500" data-member="${encoded}" title="${t('mergeTitle')}">${icon.merge}</button>`;
-      return `<div class="grid grid-cols-[minmax(0,1fr)_130px_100px_76px] items-center gap-3 border-b border-slate-800/60 px-5 py-4 last:border-0 hover:bg-white/[0.015]">
+      return `<div class="grid grid-cols-[minmax(0,1fr)_130px_100px_112px] items-center gap-3 border-b border-slate-800/60 px-5 py-4 last:border-0 hover:bg-white/[0.015]">
         <div class="flex min-w-0 items-center gap-3"><div class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-slate-800/70 text-xs font-bold text-sky-400">${escapeHtml(appDisplayName.slice(0, 1).toUpperCase())}</div><div class="min-w-0"><div class="truncate text-sm font-medium text-slate-200">${escapeHtml(project.name === 'Без отдельного файла' ? t('noFile') : project.name)}</div><div class="mt-0.5 text-[11px] text-slate-600">${escapeHtml(appDisplayName)}</div>${linkedHint}</div></div>
         <div class="text-xs text-slate-500">${formatDate(project.lastUsed)}</div><div class="text-right"><div class="font-mono text-sm font-semibold text-slate-200">${formatDuration(project.seconds)}</div>${coinValue(project.seconds, 'justify-end')}</div>
-        <div class="flex justify-end">${primaryAction}<button class="icon-button delete-project hover:text-rose-400" data-member="${encoded}" title="${t('deleteProjectTitle')}">${icon.trash}</button></div>
+        <div class="flex justify-end">${primaryAction}<button class="icon-button ignore-project hover:text-amber-400" data-member="${encoded}" title="${t('hideProjectTitle')}">${icon.hide}</button><button class="icon-button delete-project hover:text-rose-400" data-member="${encoded}" title="${t('deleteProjectTitle')}">${icon.trash}</button></div>
       </div>`;
     }
 
@@ -337,7 +341,7 @@ function renderProjectRows(projects) {
       const encoded = encodeMember(project.member);
       const ungroupAction = group.isContainer || group.resolvedMembers.length > 1 ? `<button class="ungroup-project grid h-5 w-5 place-items-center rounded text-violet-400 hover:bg-violet-400/10 hover:text-white" data-group-id="${escapeHtml(group.id)}" data-member="${encoded}" title="${t('leaveMergeTitle')}">−</button>` : '';
       const appDisplayName = project.app.isManual ? t('manualProject') : project.app.name;
-      return `<span class="inline-flex items-center gap-1 rounded-lg border border-violet-500/10 bg-violet-500/[0.06] py-1 pl-2.5 pr-1 text-[11px] text-violet-300"><span>${escapeHtml(project.name === 'Без отдельного файла' ? t('noFile') : project.name)}</span><span class="text-violet-500/60">· ${escapeHtml(appDisplayName)}</span>${ungroupAction}<button class="delete-project grid h-5 w-5 place-items-center rounded text-slate-600 hover:bg-rose-400/10 hover:text-rose-400" data-member="${encoded}" title="${t('deleteProjectTitle')}">×</button></span>`;
+      return `<span class="inline-flex items-center gap-1 rounded-lg border border-violet-500/10 bg-violet-500/[0.06] py-1 pl-2.5 pr-1 text-[11px] text-violet-300"><span>${escapeHtml(project.name === 'Без отдельного файла' ? t('noFile') : project.name)}</span><span class="text-violet-500/60">· ${escapeHtml(appDisplayName)}</span>${ungroupAction}<button class="ignore-project grid h-5 w-5 place-items-center rounded text-slate-600 hover:bg-amber-400/10 hover:text-amber-400" data-member="${encoded}" title="${t('hideProjectTitle')}">${icon.hide}</button><button class="delete-project grid h-5 w-5 place-items-center rounded text-slate-600 hover:bg-rose-400/10 hover:text-rose-400" data-member="${encoded}" title="${t('deleteProjectTitle')}">×</button></span>`;
     }).join('');
     const linkChips = (state.projectLinks || []).filter((link) => group.members.some((member) => sameMember(member, link.target))).map((link) => {
       const sourceApp = state.apps.find((app) => app.id === link.sourceAppId);
@@ -350,6 +354,22 @@ function renderProjectRows(projects) {
     return `<div class="border-b border-slate-800/60 bg-violet-500/[0.015] px-5 py-4 last:border-0">
       <div class="flex items-center gap-4"><div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-violet-500/10 text-violet-400"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h8M8 12h8M8 17h8"/><circle cx="5" cy="7" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="5" cy="17" r="1"/></svg></div><div class="min-w-0 flex-1"><div class="flex items-center gap-2"><div class="truncate text-sm font-semibold text-white">${escapeHtml(group.name || t('mergedProject'))}</div><button class="rename-project-group text-slate-600 transition hover:text-sky-400" data-group-id="${escapeHtml(group.id)}" title="${t('renameTitle')}">${icon.pencil}</button></div><div class="mt-0.5 text-[11px] text-slate-600">${groupSubtitle}</div></div><div class="text-right"><div class="font-mono text-sm font-semibold text-violet-300">${formatDuration(group.seconds)}</div><div class="mt-0.5 text-[10px] text-slate-600">${t('totalTime')}</div>${coinValue(group.seconds, 'justify-end')}</div><div class="flex">${groupPrimaryAction}${containerDeleteAction}</div></div>
       ${chips || linkChips ? `<div class="mt-3 flex flex-wrap gap-2 pl-14">${chips}${linkChips}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderIgnoredProjects() {
+  const ignored = (state.ignoredProjects || []).filter((project) => selectedApp === 'all' || project.appId === selectedApp);
+  elements.ignoredProjectsPanel.classList.toggle('hidden', ignored.length === 0);
+  elements.ignoredProjectList.innerHTML = ignored.map((project) => {
+    const member = { appId: project.appId, projectName: project.projectName };
+    const encoded = encodeMember(member);
+    const name = project.projectName === 'Без отдельного файла' ? t('noFile') : project.projectName;
+    return `<div class="grid grid-cols-[minmax(0,1fr)_130px_100px_44px] items-center gap-3 border-b border-slate-800/60 px-5 py-4 last:border-0">
+      <div class="min-w-0"><div class="truncate text-sm font-medium text-slate-400">${escapeHtml(name)}</div><div class="mt-0.5 text-[11px] text-slate-700">${escapeHtml(project.appName)}</div></div>
+      <div class="text-xs text-slate-600">${formatDate(project.lastUsed)}</div>
+      <div class="text-right font-mono text-sm text-slate-500">${formatDuration(project.seconds)}</div>
+      <button class="icon-button restore-project text-slate-500 hover:text-emerald-400" data-member="${encoded}" title="${t('restoreProjectTitle')}">${icon.restore}</button>
     </div>`;
   }).join('');
 }
@@ -374,6 +394,7 @@ function renderOverview() {
     ? `<div class="p-4 text-center"><button class="load-more-projects secondary-button" type="button">${t('loadMore')} (${state.pagination.offset + state.pagination.limit}/${state.pagination.total})</button></div>`
     : '';
   elements.projectList.innerHTML = `${renderProjectRows(projects)}${loadMore}`;
+  renderIgnoredProjects();
 }
 
 function renderApps() {
@@ -822,6 +843,11 @@ elements.projectList.addEventListener('click', async (event) => {
   }
   const renameButton = event.target.closest('.rename-project-group');
   if (renameButton) return openRenameGroupModal(renameButton.dataset.groupId);
+  const ignoreButton = event.target.closest('.ignore-project');
+  if (ignoreButton) {
+    state = await window.workTracker.setProjectIgnored(decodeMember(ignoreButton.dataset.member), true);
+    return render();
+  }
   const mergeButton = event.target.closest('.merge-project');
   if (mergeButton) return openMergeModal(decodeMember(mergeButton.dataset.member));
   const ungroupButton = event.target.closest('.ungroup-project');
@@ -832,6 +858,12 @@ elements.projectList.addEventListener('click', async (event) => {
   const deleteButton = event.target.closest('.delete-project');
   if (!deleteButton || !await confirmAction(t('confirmProject'))) return;
   state = await window.workTracker.deleteProject(decodeMember(deleteButton.dataset.member));
+  render();
+});
+elements.ignoredProjectList.addEventListener('click', async (event) => {
+  const restoreButton = event.target.closest('.restore-project');
+  if (!restoreButton) return;
+  state = await window.workTracker.setProjectIgnored(decodeMember(restoreButton.dataset.member), false);
   render();
 });
 

@@ -1,6 +1,6 @@
 const { PersistenceError } = require('./errors');
 
-const LATEST_SCHEMA_VERSION = 1;
+const LATEST_SCHEMA_VERSION = 2;
 
 const MIGRATIONS = [
   {
@@ -230,6 +230,41 @@ const MIGRATIONS = [
       END;
     `,
   },
+  {
+    version: 2,
+    name: 'ignored-projects',
+    sql: `
+      ALTER TABLE projects ADD COLUMN is_ignored INTEGER NOT NULL DEFAULT 0 CHECK (is_ignored IN (0, 1));
+      CREATE INDEX projects_ignored_application_updated_idx
+        ON projects(is_ignored, application_id, updated_at_ms DESC);
+      CREATE TRIGGER intervals_reject_ignored_project BEFORE INSERT ON tracking_intervals BEGIN
+        SELECT CASE WHEN EXISTS (
+          SELECT 1 FROM projects WHERE id = NEW.project_id AND is_ignored = 1
+        ) THEN RAISE(ABORT, 'ignored project cannot receive intervals') END;
+      END;
+      CREATE TRIGGER links_reject_ignored_target_insert BEFORE INSERT ON project_links BEGIN
+        SELECT CASE WHEN EXISTS (
+          SELECT 1 FROM projects WHERE id = NEW.target_project_id AND is_ignored = 1
+        ) THEN RAISE(ABORT, 'ignored project cannot be a link target') END;
+      END;
+      CREATE TRIGGER links_reject_ignored_target_update BEFORE UPDATE OF target_project_id, enabled ON project_links BEGIN
+        SELECT CASE WHEN NEW.enabled = 1 AND EXISTS (
+          SELECT 1 FROM projects WHERE id = NEW.target_project_id AND is_ignored = 1
+        ) THEN RAISE(ABORT, 'ignored project cannot be an enabled link target') END;
+      END;
+      CREATE TRIGGER projects_disable_links_when_ignored AFTER UPDATE OF is_ignored ON projects
+      WHEN NEW.is_ignored = 1 BEGIN
+        UPDATE project_links SET enabled = 0, updated_at_ms = NEW.updated_at_ms
+        WHERE target_project_id = NEW.id OR target_project_id IN (
+          SELECT anchor.project_id FROM group_members member
+          JOIN group_members anchor ON anchor.group_id = member.group_id
+          JOIN projects anchor_project ON anchor_project.id = anchor.project_id
+          JOIN applications anchor_application ON anchor_application.id = anchor_project.application_id
+          WHERE member.project_id = NEW.id AND anchor_application.is_manual = 1
+        );
+      END;
+    `,
+  },
 ];
 
 const REQUIRED_TABLES = [
@@ -239,7 +274,8 @@ const REQUIRED_TABLES = [
 ];
 
 const REQUIRED_INDEXES = [
-  'applications_process_unique', 'projects_unassigned_unique', 'projects_application_idx', 'tracked_files_application_idx',
+  'applications_process_unique', 'projects_unassigned_unique', 'projects_application_idx',
+  'projects_ignored_application_updated_idx', 'tracked_files_application_idx',
   'group_members_group_idx', 'project_links_one_enabled_source', 'project_links_target_idx',
   'tracking_intervals_application_end_idx', 'tracking_intervals_project_end_idx',
   'link_allocations_target_idx', 'health_events_subsystem_created_idx',
@@ -249,14 +285,16 @@ const REQUIRED_TRIGGERS = [
   'applications_totals_insert', 'projects_totals_insert', 'links_validate_insert',
   'links_validate_update', 'allocations_validate_insert', 'allocations_validate_update',
   'intervals_totals_insert', 'intervals_totals_delete', 'allocations_totals_insert',
-  'allocations_totals_delete',
+  'allocations_totals_delete', 'intervals_reject_ignored_project',
+  'links_reject_ignored_target_insert', 'links_reject_ignored_target_update',
+  'projects_disable_links_when_ignored',
 ];
 
 const REQUIRED_COLUMNS = {
   settings: ['id', 'tracking_enabled', 'poll_interval_seconds', 'idle_timeout_minutes', 'language', 'hourly_rate_cents', 'launch_at_startup', 'updated_at_ms'],
   applications: ['id', 'name', 'process_name', 'normalized_process_name', 'executable_path', 'project_mode', 'title_segment_from_end', 'is_manual', 'manual_project_name', 'created_at_ms', 'updated_at_ms'],
   application_extensions: ['application_id', 'extension'],
-  projects: ['id', 'application_id', 'name', 'kind', 'created_at_ms', 'updated_at_ms'],
+  projects: ['id', 'application_id', 'name', 'kind', 'created_at_ms', 'updated_at_ms', 'is_ignored'],
   tracked_files: ['id', 'application_id', 'project_id', 'path', 'normalized_path', 'status', 'last_error_code', 'last_observed_mtime_ms', 'activated_at_ms', 'last_checked_at_ms', 'created_at_ms'],
   project_groups: ['id', 'name', 'is_container', 'created_at_ms', 'updated_at_ms'],
   group_members: ['group_id', 'project_id'],

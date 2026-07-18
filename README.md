@@ -13,6 +13,7 @@ A local work time tracker for Windows. WorkTracer detects the active application
 - Automatic time tracking based on the active window.
 - Automatic pause when the user is inactive, with an option to stop tracking manually.
 - Separate statistics for applications and projects.
+- Reversible exclusion of utility windows and projects that should not contribute tracked time.
 - Grouping related files and projects from different applications into named containers.
 - Linking applications that do not expose a document name, such as ZBrush, to a selected working project.
 - Calculation of time cost based on a configurable hourly rate.

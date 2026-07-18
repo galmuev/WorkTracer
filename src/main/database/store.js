@@ -247,10 +247,12 @@ class WorkTrackerStore {
     const endWallMs = sqliteInteger(interval.endWallMs, 'Конец интервала');
     if (endWallMs < startWallMs) throw new ValidationError('Конец интервала не может быть раньше начала.');
     return this.#write('interval.record', () => {
+      const project = this.statements.projectById.get(assertId(interval.projectId));
+      if (!project || project.is_ignored) return { inserted: false, ignored: Boolean(project?.is_ignored) };
       const intervalId = id();
       const inserted = this.statements.insertInterval.run(
         intervalId, boundedString(interval.sampleId, 'ID выборки', 160), assertId(interval.applicationId),
-        assertId(interval.projectId), startWallMs, endWallMs, durationMs,
+        project.id, startWallMs, endWallMs, durationMs,
         sqliteInteger(interval.monitorGeneration, 'Поколение монитора'), this.now(),
       );
       if (inserted.changes === 0) return { inserted: false };
@@ -368,6 +370,25 @@ class WorkTrackerStore {
     });
   }
 
+  async setProjectIgnored(member, ignored) {
+    const nextIgnored = Boolean(ignored);
+    await this.#write(nextIgnored ? 'project.ignore' : 'project.restore', () => {
+      const project = this.#resolveMember(member);
+      const application = this.statements.applicationById.get(project.application_id);
+      if (!application || application.is_manual || project.kind === 'manual') {
+        throw new ValidationError('Контейнер проекта нельзя перенести в исключения.');
+      }
+      this.db.prepare('UPDATE projects SET is_ignored = ?, updated_at_ms = ? WHERE id = ?')
+        .run(Number(nextIgnored), this.now(), project.id);
+      if (nextIgnored) {
+        this.db.prepare('UPDATE project_links SET enabled = 0, updated_at_ms = ? WHERE target_project_id = ?')
+          .run(this.now(), project.id);
+      }
+      this.db.prepare("INSERT INTO audit_events(operation, status, affected_count, created_at_ms) VALUES (?, 'committed', 1, ?)")
+        .run(nextIgnored ? 'ignore-project' : 'restore-project', this.now());
+    });
+  }
+
   async mergeProjects(sourceMember, targetMember) {
     await this.#write('container.merge', () => {
       const source = this.#resolveMember(sourceMember);
@@ -442,6 +463,7 @@ class WorkTrackerStore {
       const source = this.statements.applicationById.get(sourceId);
       if (!source || source.project_mode !== 'app' || source.is_manual) throw new ValidationError('Линки доступны только для режима «Вся программа».');
       const target = this.#resolveMember(targetMember);
+      if (target.is_ignored) throw new ValidationError('Нельзя создать линк на проект из исключений.');
       if (target.application_id === sourceId) throw new ValidationError('Нельзя создать линк программы на саму себя.');
       let group = this.statements.groupForProject.get(target.id);
       if (!group) {
@@ -522,11 +544,13 @@ class WorkTrackerStore {
       statistics[app.id] = { totalSeconds: total / 1000, projects: Object.create(null) };
       app.trackedFiles = [];
     }
-    const totalProjects = this.db.prepare(`SELECT COUNT(*) AS count FROM projects p JOIN applications a ON a.id = p.application_id WHERE a.is_manual = 0`).get().count;
+    const totalProjects = this.db.prepare(`SELECT COUNT(*) AS count FROM projects p JOIN applications a ON a.id = p.application_id
+      WHERE a.is_manual = 0 AND p.is_ignored = 0`).get().count;
     const pageRows = this.db.prepare(`SELECT p.*, pt.own_duration_ms, pt.linked_duration_ms, pt.last_used_ms,
       gm.group_id FROM projects p JOIN applications a ON a.id = p.application_id
       JOIN project_totals pt ON pt.project_id = p.id LEFT JOIN group_members gm ON gm.project_id = p.id
-      WHERE a.is_manual = 0 ORDER BY COALESCE(pt.last_used_ms, p.created_at_ms) DESC LIMIT ? OFFSET ?`).all(safeLimit, safeOffset);
+      WHERE a.is_manual = 0 AND p.is_ignored = 0
+      ORDER BY COALESCE(pt.last_used_ms, p.created_at_ms) DESC LIMIT ? OFFSET ?`).all(safeLimit, safeOffset);
     const groupIds = new Set(pageRows.map((row) => row.group_id).filter(Boolean));
     if (safeOffset === 0) {
       for (const row of this.db.prepare(`SELECT g.id FROM project_groups g WHERE NOT EXISTS (
@@ -538,7 +562,7 @@ class WorkTrackerStore {
     let remainingGroupMemberBudget = DATABASE.maximumGroupMembersPerState;
     const groupMemberStatement = this.db.prepare(`SELECT p.*, a.id AS app_id, pt.own_duration_ms, pt.linked_duration_ms, pt.last_used_ms
       FROM group_members gm JOIN projects p ON p.id = gm.project_id JOIN applications a ON a.id = p.application_id
-      JOIN project_totals pt ON pt.project_id = p.id WHERE gm.group_id = ?
+      JOIN project_totals pt ON pt.project_id = p.id WHERE gm.group_id = ? AND p.is_ignored = 0
       ORDER BY a.is_manual DESC, COALESCE(pt.last_used_ms, p.created_at_ms) DESC LIMIT ?`);
     for (const groupId of [...groupIds].slice(0, safeLimit)) {
       const group = this.db.prepare('SELECT * FROM project_groups WHERE id = ?').get(groupId);
@@ -550,7 +574,8 @@ class WorkTrackerStore {
       remainingGroupMemberBudget -= visibleMembers.length;
       for (const member of visibleMembers) projectRows.set(member.id, member);
       const totals = this.db.prepare(`SELECT COALESCE(SUM(pt.own_duration_ms + pt.linked_duration_ms), 0) AS duration_ms,
-        MAX(pt.last_used_ms) AS last_used_ms FROM group_members gm JOIN project_totals pt ON pt.project_id = gm.project_id WHERE gm.group_id = ?`).get(groupId);
+        MAX(pt.last_used_ms) AS last_used_ms FROM group_members gm JOIN projects p ON p.id = gm.project_id
+        JOIN project_totals pt ON pt.project_id = gm.project_id WHERE gm.group_id = ? AND p.is_ignored = 0`).get(groupId);
       projectGroups.push({
         id: group.id, name: group.name, isContainer: true, truncated,
         seconds: totals.duration_ms / 1000, lastUsed: nowIso(totals.last_used_ms),
@@ -574,9 +599,21 @@ class WorkTrackerStore {
         target: { appId: row.target_application_id, projectName: row.target_kind === 'unassigned' ? UNASSIGNED_DISPLAY_NAME : row.target_name },
         enabled: Boolean(row.enabled), seconds: row.duration_ms / 1000, lastUsed: nowIso(row.last_used_ms),
       }));
+    const ignoredProjects = this.db.prepare(`SELECT p.name, p.kind, p.application_id, a.name AS application_name,
+      pt.own_duration_ms, pt.linked_duration_ms, pt.last_used_ms
+      FROM projects p JOIN applications a ON a.id = p.application_id
+      JOIN project_totals pt ON pt.project_id = p.id
+      WHERE p.is_ignored = 1 AND a.is_manual = 0
+      ORDER BY p.updated_at_ms DESC LIMIT ?`).all(DATABASE.maximumIgnoredProjectsPerState).map((row) => ({
+      appId: row.application_id,
+      appName: row.application_name,
+      projectName: row.kind === 'unassigned' ? UNASSIGNED_DISPLAY_NAME : row.name,
+      seconds: (row.own_duration_ms + row.linked_duration_ms) / 1000,
+      lastUsed: nowIso(row.last_used_ms),
+    }));
     return {
       trackingEnabled: Boolean(settingsRow.tracking_enabled), applications, apps: applications,
-      statistics, projectGroups, projectLinks,
+      statistics, projectGroups, projectLinks, ignoredProjects,
       settings: this.getSettings(),
       pagination: { offset: safeOffset, limit: safeLimit, total: totalProjects, hasMore: safeOffset + pageRows.length < totalProjects },
     };
