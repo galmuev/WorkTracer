@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { @apply border-slate-800; }
+  body { @apply m-0 min-h-screen bg-ink-950 font-sans text-slate-200 antialiased; }
+  button, input { @apply outline-none; }
+  ::selection { @apply bg-sky-500/30 text-white; }
+}
+
+@layer components {
+  .panel { @apply rounded-2xl border border-slate-800/80 bg-ink-900/80 shadow-xl shadow-black/10; }
+  .nav-button { @apply flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 transition hover:bg-white/5 hover:text-white; }
+  .nav-button.active { @apply bg-sky-500/10 text-sky-400 ring-1 ring-inset ring-sky-400/10; }
+  .field { @apply w-full rounded-xl border border-slate-700 bg-ink-950 px-3.5 py-3 text-sm text-white placeholder:text-slate-600 focus:border-sky-500/70 focus:ring-2 focus:ring-sky-500/10; }
+  .primary-button { @apply inline-flex items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-sky-400 active:scale-[0.98]; }
+  .secondary-button { @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-white/[0.03] px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-slate-600 hover:bg-white/[0.06] hover:text-white; }
+  .icon-button { @apply grid h-9 w-9 place-items-center rounded-lg text-slate-500 transition hover:bg-white/5 hover:text-slate-200; }
+}

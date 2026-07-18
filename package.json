@@ -1,0 +1,88 @@
+{
+  "name": "worktracker",
+  "version": "1.1.0",
+  "description": "Локальный трекер рабочего времени по активным приложениям и файлам",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "postinstall": "electron-builder install-app-deps",
+    "test": "node scripts/electron-node.js --test --test-isolation=none test/*.test.js",
+    "test:database": "node scripts/electron-node.js --test --test-isolation=none test/database.test.js",
+    "test:recovery": "node scripts/electron-node.js --test --test-isolation=none test/backup-recovery.test.js",
+    "test:accounting": "node scripts/electron-node.js --test --test-isolation=none test/accounting.test.js",
+    "test:destructive": "node scripts/electron-node.js --test --test-isolation=none test/destructive.test.js",
+    "test:monitor": "node scripts/electron-node.js --test --test-isolation=none test/window-monitor.test.js",
+    "test:tracked-files": "node scripts/electron-node.js --test --test-isolation=none test/tracked-files.test.js",
+    "lint": "node scripts/quality-check.js",
+    "typecheck": "tsc --noEmit",
+    "quality": "npm run lint && npm run typecheck && npm test",
+    "smoke": "node scripts/smoke-app.js",
+    "rebuild:native": "electron-builder install-app-deps",
+    "check:database": "electron scripts/check-database.js",
+    "build:css": "tailwindcss -i ./src/input.css -o ./dist/styles.css --minify",
+    "dev:css": "tailwindcss -i ./src/input.css -o ./dist/styles.css --watch",
+    "pack:win": "npm run build:css && electron-builder --win --dir",
+    "portable:win": "npm run build:css && electron-builder --win portable",
+    "dist:win": "npm run build:css && electron-builder --win nsis"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "build": {
+    "appId": "com.worktracer.app",
+    "productName": "WorkTracer",
+    "artifactName": "WorkTracer-${version}-${arch}.${ext}",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "**/*",
+      "!active-window.ps1",
+      "!release/**",
+      "!tmp/**",
+      "!src/input.css",
+      "!test/**",
+      "!docs/**",
+      "!scripts/**",
+      "!.github/**"
+    ],
+    "extraResources": [
+      {
+        "from": "active-window.ps1",
+        "to": "active-window.ps1"
+      }
+    ],
+    "win": {
+      "executableName": "WorkTracer",
+      "icon": "assets/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "WorkTracer"
+    },
+    "portable": {
+      "artifactName": "WorkTracer-${version}-${arch}-portable.${ext}"
+    }
+  },
+  "devDependencies": {
+    "electron": "^43.1.1",
+    "electron-builder": "^26.15.3",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "better-sqlite3": "https://github.com/WiseLibs/better-sqlite3/archive/refs/tags/v12.12.0.tar.gz"
+  }
+}

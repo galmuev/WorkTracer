@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:">
+  <title>WorkTracker</title>
+  <link rel="stylesheet" href="dist/styles.css">
+</head>
+<body class="overflow-hidden">
+  <div class="pointer-events-none fixed inset-0 overflow-hidden">
+    <div class="absolute -left-40 -top-40 h-[520px] w-[520px] rounded-full bg-sky-600/[0.07] blur-3xl"></div>
+    <div class="absolute -bottom-64 right-0 h-[500px] w-[500px] rounded-full bg-blue-900/[0.08] blur-3xl"></div>
+  </div>
+
+  <div class="relative flex h-screen min-h-[620px]">
+    <aside class="flex w-60 shrink-0 flex-col border-r border-slate-800/70 bg-ink-900/60 p-4 backdrop-blur-xl">
+      <div class="mb-8 flex items-center gap-3 px-2 pt-2">
+        <div class="grid h-10 w-10 place-items-center rounded-xl bg-sky-500 shadow-glow">
+          <svg class="h-5 w-5 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></svg>
+        </div>
+        <div>
+          <div class="font-semibold tracking-tight text-white">WorkTracker</div>
+          <div class="text-[11px] text-slate-500">Локальный учёт времени</div>
+        </div>
+      </div>
+
+      <nav class="space-y-1">
+        <button class="nav-button active" data-page="overview">
+          <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>
+          Проекты
+        </button>
+        <button class="nav-button" data-page="apps">
+          <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg>
+          Программы
+        </button>
+        <button class="nav-button" data-page="settings">
+          <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg>
+          Настройки
+        </button>
+        <div class="my-2 border-t border-slate-800/70"></div>
+        <button id="tracking-toggle" class="nav-button"></button>
+      </nav>
+
+      <div class="mt-auto space-y-3">
+        <div id="sidebar-status" class="rounded-xl border border-slate-800 bg-black/10 p-3"></div>
+        <button id="minimize-button" class="secondary-button w-full">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>
+          Свернуть в трей
+        </button>
+        <div class="px-1 text-[10px] leading-relaxed text-slate-600">Статистика хранится только на этом компьютере.</div>
+      </div>
+    </aside>
+
+    <main class="min-w-0 flex-1 overflow-y-auto">
+      <section id="page-overview" class="mx-auto max-w-6xl p-7 lg:p-9">
+        <header class="mb-7">
+          <h1 class="text-3xl font-semibold tracking-tight text-white">Обзор проектов</h1>
+          <p class="mt-2 text-sm text-slate-500">Автоматический учёт активных проектов и контейнеров</p>
+        </header>
+
+        <div id="unsupported-warning" class="mb-6 hidden rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 text-sm text-amber-300"></div>
+
+        <div id="current-card" class="panel mb-6 overflow-hidden"></div>
+
+        <div class="panel overflow-hidden">
+          <div class="flex items-center justify-between border-b border-slate-800/80 px-5 py-4">
+            <div><h2 class="font-semibold text-white">Проекты</h2><p class="mt-0.5 text-xs text-slate-600">Объединяйте проекты из разных программ в контейнеры</p></div>
+            <div class="flex items-center gap-2">
+              <button id="create-empty-project-button" class="icon-button text-violet-400" type="button" title="Создать пустой проект"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
+              <button id="add-project-file-button" class="icon-button hidden text-sky-400" type="button" title="Добавить отслеживаемый файл"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h7l2 2h9v11H3z"/><path d="M12 11v5M9.5 13.5h5"/></svg></button>
+              <select id="app-filter" class="rounded-lg border border-slate-800 bg-ink-950 px-3 py-2 text-xs text-slate-400 outline-none"></select>
+            </div>
+          </div>
+          <div id="project-list"></div>
+        </div>
+      </section>
+
+      <section id="page-apps" class="mx-auto hidden max-w-5xl p-7 lg:p-9">
+        <header class="mb-7">
+          <h1 class="text-3xl font-semibold tracking-tight text-white">Отслеживаемые программы</h1>
+          <p class="mt-2 text-sm text-slate-500">Добавьте процесс и расширения рабочих файлов.</p>
+        </header>
+
+        <div class="grid grid-cols-[minmax(0,1fr)_340px] items-start gap-5">
+          <div class="panel overflow-hidden">
+            <div class="border-b border-slate-800/80 px-5 py-4"><h2 class="font-semibold text-white">Список программ</h2></div>
+            <div id="app-list"></div>
+          </div>
+
+          <form id="add-app-form" class="panel p-5">
+            <div class="mb-5 flex items-center gap-3"><span class="grid h-9 w-9 place-items-center rounded-lg bg-sky-500/10 text-sky-400"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></span><div><h2 id="app-form-title" class="font-semibold text-white">Добавить программу</h2><p id="app-form-subtitle" class="text-xs text-slate-600">Например, Substance Painter</p></div></div>
+            <div class="mb-2 grid grid-cols-2 gap-2">
+              <button id="active-window-button" class="secondary-button px-3" type="button" title="Подставить программу, которая была активна перед WorkTracker">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 22h8M12 18v4"/></svg>
+                Активное окно
+              </button>
+              <button id="choose-exe-button" class="secondary-button px-3" type="button">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h7l2 2h9v11H3z"/></svg>
+                Выбрать EXE
+              </button>
+            </div>
+            <p class="mb-5 text-[11px] leading-relaxed text-slate-600">Откройте нужную программу не меньше чем на один интервал проверки, затем вернитесь и нажмите «Активное окно».</p>
+            <p id="detected-source" class="mb-4 hidden rounded-lg border border-sky-500/10 bg-sky-500/5 px-3 py-2 text-[11px] leading-relaxed text-sky-300"></p>
+            <label class="mb-1.5 block text-xs font-medium text-slate-400" for="app-name">Название</label>
+            <input class="field mb-4" id="app-name" name="name" required placeholder="Substance Painter">
+            <label class="mb-1.5 block text-xs font-medium text-slate-400" for="process-name">Имя процесса</label>
+            <input class="field mb-1.5" id="process-name" name="processName" required placeholder="Adobe Substance 3D Painter">
+            <input id="executable-path" name="executablePath" type="hidden">
+            <p class="mb-4 text-[11px] leading-relaxed text-slate-600">Можно посмотреть в Диспетчере задач. «.exe» указывать необязательно.</p>
+            <label class="mb-1.5 block text-xs font-medium text-slate-400" for="extensions">Расширения файлов</label>
+            <input class="field mb-1.5" id="extensions" name="extensions" placeholder="spp, sbsar">
+            <p class="mb-4 text-[11px] leading-relaxed text-slate-600">Через запятую. Используются для поиска имени в заголовке и фильтра выбора файлов.</p>
+            <label class="mb-1.5 block text-xs font-medium text-slate-400" for="project-mode">Как определять проект</label>
+            <select class="field mb-2" id="project-mode" name="projectMode">
+              <option value="file">По первой части заголовка окна</option>
+              <option value="title-segment">По выбранной части заголовка</option>
+              <option value="tracked-file">По изменению выбранного файла</option>
+              <option value="app">Вся программа — один проект</option>
+            </select>
+            <input id="title-segment-from-end" name="titleSegmentFromEnd" type="hidden" value="2">
+            <div id="title-segment-picker" class="mb-5 hidden rounded-xl border border-sky-500/10 bg-sky-500/[0.04] p-3">
+              <p class="mb-2 text-[11px] text-slate-500">Нажмите на часть заголовка, которая обозначает проект:</p>
+              <div id="title-segments" class="flex flex-wrap gap-1.5"></div>
+              <p id="project-preview" class="mt-2 text-[11px] text-sky-400"></p>
+            </div>
+            <p id="project-mode-hint" class="mb-5 text-[11px] leading-relaxed text-slate-600"></p>
+            <p id="form-error" class="mb-3 hidden rounded-lg bg-rose-500/10 px-3 py-2 text-xs text-rose-400"></p>
+            <div class="flex gap-2"><button id="cancel-edit-button" class="secondary-button hidden" type="button">Отмена</button><button id="app-submit-button" class="primary-button flex-1" type="submit">Добавить в отслеживание</button></div>
+          </form>
+        </div>
+      </section>
+
+      <section id="page-settings" class="mx-auto hidden max-w-4xl p-7 lg:p-9">
+        <header class="mb-7">
+          <h1 class="text-3xl font-semibold tracking-tight text-white">Общие настройки</h1>
+          <p class="mt-2 text-sm text-slate-500">Настройте частоту проверки и реакцию на бездействие.</p>
+        </header>
+
+        <form id="settings-form" class="panel overflow-hidden">
+          <div class="border-b border-slate-800/80 px-6 py-5"><h2 class="font-semibold text-white">Учёт активности</h2><p class="mt-1 text-xs text-slate-600">Изменения применяются к фоновому монитору сразу после сохранения.</p></div>
+          <div class="divide-y divide-slate-800/60">
+            <label class="grid grid-cols-[minmax(0,1fr)_180px] items-center gap-6 px-6 py-5">
+              <span><span class="block text-sm font-medium text-slate-200">Язык интерфейса</span><span class="mt-1 block text-xs leading-relaxed text-slate-600">Меняет язык окна, подсказок, ошибок и меню в системном трее.</span></span>
+              <select id="language-select" name="language" class="field"><option value="ru">Русский</option><option value="en">English</option></select>
+            </label>
+            <label class="grid cursor-pointer grid-cols-[minmax(0,1fr)_180px] items-center gap-6 px-6 py-5">
+              <span><span class="block text-sm font-medium text-slate-200">Запускать вместе с Windows</span><span class="mt-1 block text-xs leading-relaxed text-slate-600">WorkTracer запустится в системном трее без открытия основного окна.</span></span>
+              <span class="flex justify-end"><input id="launch-at-startup" name="launchAtStartup" class="peer sr-only" type="checkbox"><span class="relative h-6 w-11 rounded-full bg-slate-700 transition after:absolute after:left-1 after:top-1 after:h-4 after:w-4 after:rounded-full after:bg-slate-300 after:transition peer-checked:bg-sky-500 peer-checked:after:translate-x-5 peer-checked:after:bg-white"></span></span>
+            </label>
+            <label class="grid grid-cols-[minmax(0,1fr)_140px] items-center gap-6 px-6 py-5">
+              <span><span class="block text-sm font-medium text-slate-200">Интервал проверки</span><span class="mt-1 block text-xs leading-relaxed text-slate-600">Как часто проверять активное окно. Меньшее значение точнее, но создаёт больше системных обращений.</span></span>
+              <span class="relative"><input id="poll-interval" name="pollIntervalSeconds" class="field pr-12" type="number" min="1" max="60" step="1" required><span class="pointer-events-none absolute right-3 top-3 text-xs text-slate-600">сек</span></span>
+            </label>
+            <label class="grid grid-cols-[minmax(0,1fr)_140px] items-center gap-6 px-6 py-5">
+              <span><span class="block text-sm font-medium text-slate-200">Порог бездействия</span><span class="mt-1 block text-xs leading-relaxed text-slate-600">Не учитывать время, если пользователь не двигает мышь и не нажимает клавиши. Значение 0 отключает проверку.</span></span>
+              <span class="relative"><input id="idle-timeout" name="idleTimeoutMinutes" class="field pr-12" type="number" min="0" max="1440" step="1" required><span class="pointer-events-none absolute right-3 top-3 text-xs text-slate-600">мин</span></span>
+            </label>
+            <label class="grid grid-cols-[minmax(0,1fr)_180px] items-center gap-6 px-6 py-5">
+              <span><span class="block text-sm font-medium text-slate-200">Стоимость часа</span><span class="mt-1 block text-xs leading-relaxed text-slate-600">Условная ставка для расчёта стоимости времени каждого проекта.</span></span>
+              <span class="relative"><input id="hourly-rate" name="hourlyRate" class="field pr-11" type="number" min="0" max="1000000000" step="0.01" required><span class="pointer-events-none absolute right-3 top-2.5 grid h-6 w-6 place-items-center rounded-full border border-amber-300/30 bg-amber-400/10 text-[10px] font-bold text-amber-400">C</span></span>
+            </label>
+          </div>
+          <div class="flex items-center justify-between border-t border-slate-800/80 bg-black/10 px-6 py-4"><p id="settings-error" class="hidden text-xs text-rose-400"></p><span class="flex-1"></span><button class="primary-button" type="submit">Сохранить настройки</button></div>
+        </form>
+
+        <div class="panel mt-5 overflow-hidden">
+          <div class="flex items-center justify-between border-b border-slate-800/80 px-6 py-5"><div><h2 class="font-semibold text-white">Файлы данных</h2><p class="mt-1 text-xs text-slate-600">SQLite-база и каталог многопоколенных проверяемых резервных копий.</p></div><div class="flex gap-2"><button id="open-data-folder-button" class="secondary-button" type="button"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h7l2 2h9v11H3z"/></svg>Открыть папку</button><button id="create-backup-button" class="primary-button" type="button"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>Создать резервную копию</button></div></div>
+          <div class="space-y-3 px-6 py-5">
+            <div><div class="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-600">База SQLite</div><div id="main-data-path" class="break-all rounded-lg bg-black/20 px-3 py-2 font-mono text-[11px] text-slate-400"></div></div>
+            <div><div class="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-600">Каталог резервных копий</div><div id="backup-data-path" class="break-all rounded-lg bg-black/20 px-3 py-2 font-mono text-[11px] text-slate-400"></div></div>
+            <p id="data-action-status" class="hidden rounded-lg px-3 py-2 text-xs"></p>
+          </div>
+        </div>
+
+        <p class="mt-5 text-center text-xs text-slate-600">Electron, Node.js, SQLite (better-sqlite3), Tailwind CSS, PowerShell, Win32 API</p>
+
+        <div class="mt-5 flex items-center justify-between rounded-xl border border-rose-500/10 bg-rose-500/[0.03] p-4">
+          <div><div class="text-sm font-medium text-slate-300">Сбросить статистику</div><div class="mt-0.5 text-xs text-slate-600">Настройки программ останутся без изменений.</div></div>
+          <button id="clear-button" class="rounded-lg border border-rose-500/20 px-3 py-2 text-xs font-medium text-rose-400 transition hover:bg-rose-500/10">Очистить данные</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="merge-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 p-6 backdrop-blur-sm">
+    <div class="panel max-h-[70vh] w-full max-w-lg overflow-hidden shadow-2xl">
+      <div class="flex items-start justify-between border-b border-slate-800 px-5 py-4"><div><h2 class="font-semibold text-white">Объединить проекты</h2><p id="merge-caption" class="mt-1 text-xs text-slate-600"></p></div><button id="merge-cancel-button" class="icon-button" title="Закрыть"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+      <div id="merge-project-list" class="max-h-[50vh] overflow-y-auto p-2"></div>
+    </div>
+  </div>
+
+  <div id="link-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 p-6 backdrop-blur-sm">
+    <div class="panel max-h-[80vh] w-full max-w-xl overflow-hidden shadow-2xl">
+      <div class="flex items-start justify-between border-b border-slate-800 px-5 py-4"><div><h2 class="font-semibold text-white">Линки программы</h2><p id="link-caption" class="mt-1 text-xs text-slate-600"></p></div><button id="link-cancel-button" class="icon-button" title="Закрыть"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+      <div class="max-h-[65vh] overflow-y-auto p-3">
+        <div id="link-existing-list" class="mb-3 space-y-2"></div>
+        <div class="border-t border-slate-800 px-2 pb-1 pt-4 text-[10px] font-semibold uppercase tracking-wider text-slate-600">Добавить линк на проект</div>
+        <div id="link-project-list" class="mt-1"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="rename-group-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 p-6 backdrop-blur-sm">
+    <form id="rename-group-form" class="panel w-full max-w-md overflow-hidden shadow-2xl">
+      <div class="flex items-start justify-between border-b border-slate-800 px-5 py-4"><div><h2 id="project-name-modal-title" class="font-semibold text-white">Название проекта</h2><p id="project-name-modal-help" class="mt-1 text-xs text-slate-600">Создайте контейнер, в который затем можно добавить файлы и проекты.</p></div><button id="rename-group-cancel-button" class="icon-button" type="button" title="Закрыть"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+      <div class="p-5">
+        <input id="rename-group-input" class="field" maxlength="100" autocomplete="off" placeholder="Название проекта">
+        <p id="rename-group-error" class="mt-3 hidden rounded-lg bg-rose-500/10 px-3 py-2 text-xs text-rose-400"></p>
+      </div>
+      <div class="flex justify-end gap-2 border-t border-slate-800 bg-black/10 px-5 py-4"><button id="rename-group-secondary-cancel" class="secondary-button" type="button">Отмена</button><button class="primary-button" type="submit">Сохранить изменения</button></div>
+    </form>
+  </div>
+
+  <div id="confirm-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 p-6 backdrop-blur-sm">
+    <div class="panel w-full max-w-md overflow-hidden shadow-2xl">
+      <div class="border-b border-slate-800 px-5 py-4"><h2 class="font-semibold text-white">Подтверждение</h2><p id="confirm-message" class="mt-2 text-sm leading-relaxed text-slate-400"></p></div>
+      <div class="flex justify-end gap-2 p-4"><button id="confirm-cancel-button" class="secondary-button" type="button">Отмена</button><button id="confirm-action-button" class="primary-button bg-rose-400 text-white hover:bg-rose-400" type="button">Удалить</button></div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
