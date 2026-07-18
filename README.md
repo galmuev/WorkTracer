@@ -2,6 +2,10 @@
 
 [English](README.md) | [Русский](README.ru.md)
 
+<p align="center">
+<img width="579" height="386" alt="image" src="https://github.com/user-attachments/assets/14d31e05-a63d-4135-8186-d2701790dd6f" />
+</p>
+
 A local work time tracker for Windows. WorkTracer detects the active application, assigns tracked time to projects, and stores all statistics exclusively on the user's computer.
 
 ## Features
